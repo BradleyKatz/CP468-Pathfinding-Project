@@ -1,0 +1,9 @@
+TODO
+====
+- Write code to display a representation of each tile and object in the display window. DONE
+- Write code to change the positions of the robots and update the display accordingly. 
+  - Hasn't been implemented yet, but is nothing more than calling move(dx * SCALE_FACTOR, dy * SCALE_FACTOR) on every object in our world.
+- Implement the freaking A* or A* based algorithm, otherwise we have no project in the first place.
+- Gabe suggests including a button to solve the problem at either a constant speed or instantaneously.
+       * If we go the constant speed route, Brad suggests adding the ability to press the button again to stop.
+- Discover the meaning of life and find inner peace.
