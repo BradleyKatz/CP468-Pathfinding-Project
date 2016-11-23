@@ -1,9 +1,12 @@
 from graphics import *
 from WorldObjects import BlankTile, RendezvousPoint, Robot, Obstacle
+from search import initGoalCosts, computeNextStep
+from math import fabs
 
 # constants
 READ_ONLY = "r"
 SPACE_BAR = "space"
+ENTER_KEY = "Return"
 SCALE_FACTOR = 50
 
 # global variables
@@ -14,6 +17,8 @@ roomHeight = 0
 roomWidth = 0
 numRobots = 0
 rendezvousPoint = None
+
+autopilotMode = False
 
 def init():
     validFileGiven = False
@@ -42,12 +47,12 @@ def init():
     # Read in the starting coordinates of each robot
     for i in range(0, numRobots):
         currentLine = inputStream.readline().split()
-        robots.append(Robot(SCALE_FACTOR * int(currentLine[1]), SCALE_FACTOR * int(currentLine[0]), SCALE_FACTOR))
+        robots.append(Robot(int(currentLine[0]), int(currentLine[1]), SCALE_FACTOR, i))
     
     # Read in the location of the rendezvous point    
     currentLine = inputStream.readline().split()
     global rendezvousPoint
-    rendezvousPoint = RendezvousPoint(SCALE_FACTOR * int(currentLine[1]), SCALE_FACTOR * int(currentLine[0]), SCALE_FACTOR)
+    rendezvousPoint = RendezvousPoint(int(currentLine[0]), int(currentLine[1]), SCALE_FACTOR, numRobots)
         
     
     # Read in the layout of the room points
@@ -73,11 +78,16 @@ def init():
         
         for j in range(0, len(currentLine)):
             if currentLine[j] == "0":
-                worldTiles[len(worldTiles) - 1].append(BlankTile(SCALE_FACTOR * j, SCALE_FACTOR * (len(worldTiles) - 1), SCALE_FACTOR))
+                worldTiles[len(worldTiles) - 1].append(BlankTile(j, (len(worldTiles) - 1), SCALE_FACTOR, numRobots))
             elif currentLine[j] == "1":
-                worldTiles[len(worldTiles) - 1].append(Obstacle(SCALE_FACTOR * j, SCALE_FACTOR * (len(worldTiles) - 1), SCALE_FACTOR)) 
-    
+                worldTiles[len(worldTiles) - 1].append(Obstacle(j, (len(worldTiles) - 1), SCALE_FACTOR, numRobots)) 
+            
     inputStream.close()
+    initGoalCosts(worldTiles, rendezvousPoint)
+    
+    for robot in robots:
+        worldTiles[robot.yPos][robot.xPos].costsFromStart[robot.robotID] = 0
+        robot.frontier.append(worldTiles[robot.yPos][robot.xPos])
 
 def displayWorld(win):
     """
@@ -102,11 +112,27 @@ init()
 window = GraphWin("Path Planning Robots", roomWidth * SCALE_FACTOR, roomHeight * SCALE_FACTOR)
 
 displayWorld(window)
+solvedCompletely = False
 
 while window.isOpen():
-    try:
-        if (window.getKey() == SPACE_BAR):
-            # Placeholder: This block will be replaced with code to display a single step of the algorithm
-            print("AWW YISS SPACE!")
-    except:
-        print("", end="") # Waste computation by being really freaking dumb
+    if not solvedCompletely:
+        key = window.checkKey()
+        numSolved = 0
+        
+        if key == ENTER_KEY:
+            autopilotMode = not autopilotMode
+        
+        if autopilotMode or key == SPACE_BAR:
+            for robot in robots:
+                computeNextStep(robot, worldTiles)
+                robot.move((robot.xPos - robot.x0) * SCALE_FACTOR, (robot.yPos - robot.y0) * SCALE_FACTOR)
+                
+                if robot.atGoal:
+                    numSolved += 1
+                    
+        if numSolved == numRobots:
+            solvedCompletely = True
+    else:
+        print("PRESS ANY KEY TO EXIT")
+        window.getKey()
+        sys.exit(1)
