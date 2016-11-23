@@ -124,7 +124,7 @@ while window.isOpen():
         
         if autopilotMode or key == SPACE_BAR:
             for robot in robots:
-                computeNextStep(robot, worldTiles)
+                computeNextStep(robot, rendezvousPoint, worldTiles)
                 robot.move((robot.xPos - robot.x0) * SCALE_FACTOR, (robot.yPos - robot.y0) * SCALE_FACTOR)
                 
                 if robot.atGoal:
