@@ -2,12 +2,14 @@ from graphics import *
 from WorldObjects import BlankTile, RendezvousPoint, Robot, Obstacle
 from search import initGoalCosts, computeNextStep
 from math import fabs
+import time
 
 # constants
 READ_ONLY = "r"
 SPACE_BAR = "space"
 ENTER_KEY = "Return"
 SCALE_FACTOR = 50
+TIME_DELAY = 0.5
 
 # global variables
 robots = []
@@ -114,25 +116,34 @@ window = GraphWin("Path Planning Robots", roomWidth * SCALE_FACTOR, roomHeight *
 displayWorld(window)
 solvedCompletely = False
 
-while window.isOpen():
-    if not solvedCompletely:
-        key = window.checkKey()
-        numSolved = 0
-        
-        if key == ENTER_KEY:
-            autopilotMode = not autopilotMode
-        
-        if autopilotMode or key == SPACE_BAR:
-            for robot in robots:
+while window.isOpen() and not solvedCompletely:
+    key = window.checkKey()
+    numSolved = 0
+    
+    if key == ENTER_KEY:
+        autopilotMode = not autopilotMode
+    
+    if autopilotMode or key == SPACE_BAR:
+        for robot in robots:
+            if not robot.atGoal:
                 computeNextStep(robot, rendezvousPoint, worldTiles)
                 robot.move((robot.xPos - robot.x0) * SCALE_FACTOR, (robot.yPos - robot.y0) * SCALE_FACTOR)
-                
-                if robot.atGoal:
-                    numSolved += 1
-                    
-        if numSolved == numRobots:
-            solvedCompletely = True
-    else:
-        print("PRESS ANY KEY TO EXIT")
-        window.getKey()
-        sys.exit(1)
+            
+            print("Robot {} --- X: {}          Y:{}".format(robot.robotID, robot.xPos, robot.yPos))
+            
+            if robot.atGoal:
+                numSolved += 1
+        
+        print()
+        
+        if autopilotMode:
+            time.sleep(TIME_DELAY)
+    if numSolved == numRobots:
+        solvedCompletely = True
+        
+for robot in robots:
+    robot.move((robot.xPos - robot.x0) * SCALE_FACTOR, (robot.yPos - robot.y0) * SCALE_FACTOR)
+
+print("PRESS ANY KEY TO EXIT")
+window.getKey()
+sys.exit(1)
